@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Disk Scheduling Simulator | LOOK & C-LOOK | SAKEC OS SLA-2</title>
+  <meta name="description"
+    content="Operating System Self-Learning Activity Stage-2: Interactive simulation and comparative analysis of LOOK and C-LOOK disk scheduling algorithms.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <header class="inst-header" role="banner">
+    <div class="inst-header-inner">
+      <div class="inst-brand">
+        <div class="inst-logo-badge" title="Shah & Anchor Kutchhi Engineering College">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+            <path d="M6 6h10"></path>
+            <path d="M6 10h10"></path>
+            <path d="M6 14h6"></path>
+          </svg>
+        </div>
+        <div class="inst-details">
+          <h2>Shah & Anchor Kutchhi Engineering College</h2>
+          <p>Department of Computer Engineering &bull; Autonomous Institute Affiliated to University of Mumbai</p>
+        </div>
+      </div>
+
+      <div class="inst-meta">
+        <span class="badge-tag badge-academic">OS SLA-2 Implementation</span>
+        <span class="badge-tag badge-stage">Semester III (2026-2027)</span>
+        <div class="student-tag">
+          <strong>Adwait Jangam</strong> (SYCM2-69) &amp; <strong>Vedika Jadhav</strong> (SYCM2-70)
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-container" id="main-content">
+
+    <section class="hero-banner">
+      <div class="hero-content">
+        <h1>Disk Scheduling Simulator: LOOK &amp; C-LOOK</h1>
+      </div>
+    </section>
+
+    <div class="main-workspace-grid">
+
+      <aside class="control-panel">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <line x1="3" y1="9" x2="21" y2="9" />
+                <line x1="9" y1="21" x2="9" y2="9" />
+              </svg>
+              Simulation Parameters
+            </span>
+            <span class="badge-tag badge-academic" style="font-size: 10px;">Input / Output</span>
+          </div>
+
+          <div class="card-body">
+
+            <div id="validation-alert" class="validation-alert" role="alert">
+              <strong>Input Validation Error:</strong>
+              <ul id="validation-errors-list"></ul>
+            </div>
+
+            <form id="disk-input-form" onsubmit="return false;">
+              
+              <div class="form-group">
+                <label class="form-label" for="input-disk-size">Total Cylinders / Disk Size</label>
+                <input type="number" id="input-disk-size" class="form-control mono" value="200" min="10" max="5000"
+                  placeholder="e.g. 200 (Tracks 0 to 199)" required>
+                <div class="form-hint">Physical track address range: 0 to <span id="label-max-track">199</span></div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="input-head-pos">Initial Head Position</label>
+                <input type="number" id="input-head-pos" class="form-control mono" value="50" min="0" max="199"
+                  placeholder="e.g. 50" required>
+                <div class="form-hint">Initial location of the disk read/write head</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Initial Head Direction</label>
+                <div class="direction-radio-group">
+                  <label class="direction-radio-label checked" id="label-dir-up">
+                    <input type="radio" name="direction-radio" value="UP" checked>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <line x1="12" y1="19" x2="12" y2="5" />
+                      <polyline points="5 12 12 5 19 12" />
+                    </svg>
+                    Higher Tracks (Up)
+                  </label>
+                  <label class="direction-radio-label" id="label-dir-down">
+                    <input type="radio" name="direction-radio" value="DOWN">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <polyline points="19 12 12 19 5 12" />
+                    </svg>
+                    Lower Tracks (Down)
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="input-request-queue">Pending Request Queue</label>
+                <input type="text" id="input-request-queue" class="form-control mono"
+                  value="176, 79, 34, 60, 92, 11, 41, 114" placeholder="e.g. 176, 79, 34, 60, 92, 11, 41, 114" required>
+                <div class="form-hint">Comma or space-separated track numbers</div>
+              </div>
+
+              <div style="display: flex; gap: 8px; margin-top: 22px;">
+                <button type="button" class="btn btn-primary" id="btn-simulate" style="flex: 1;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                  </svg>
+                  Run Simulation
+                </button>
+                <button type="button" class="btn btn-secondary" id="btn-reset" title="Reset to defaults">
+                  Reset
+                </button>
+              </div>
+
+            </form>
+          </div>
+        </div>
+
+        <div class="card" id="card-paper-presets" style="margin-top: 18px;">
+          <div class="card-header">
+            <span class="card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#15803D" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
+                <polyline points="10 9 9 9 8 9" />
+              </svg>
+              Presets
+            </span>
+          </div>
+          <div class="card-body">
+            
+            <div id="preset-details-box" class="preset-condition-box">
+              <div class="preset-cond-title" id="preset-cond-title">Test Scenario Conditions:</div>
+              <div class="preset-cond-text" id="preset-cond-desc">
+                Select a preset below to see the specific head starting position, directional sweeps, and seek conditions it tests.
+              </div>
+            </div>
+
+            <div class="presets-group" style="display: flex; flex-direction: column; gap: 8px;">
+              <button type="button" class="btn-preset-card" data-preset="1">
+                <div class="preset-card-top">
+                  <strong>Sample 1: Primary Benchmark</strong>
+                  <span class="preset-tag">8 Tracks</span>
+                </div>
+                <div class="preset-card-sub">Head: 53 &bull; Queue: 98, 183, 37, 122, 14, 124, 65, 67</div>
+              </button>
+
+              <button type="button" class="btn-preset-card" data-preset="2">
+                <div class="preset-card-top">
+                  <strong>Sample 2: All Below Head</strong>
+                  <span class="preset-tag">10 Tracks</span>
+                </div>
+                <div class="preset-card-sub">Head: 53 &bull; Queue: 2, 5, 7, 10, 15, 17, 19, 23, 26, 29</div>
+              </button>
+
+              <button type="button" class="btn-preset-card" data-preset="3">
+                <div class="preset-card-top">
+                  <strong>Sample 3: High Density</strong>
+                  <span class="preset-tag">10 Tracks</span>
+                </div>
+                <div class="preset-card-sub">Head: 53 &bull; Queue: 47, 35, 180, 132, 156, 23, 34, 5, 210, 83</div>
+              </button>
+
+              <button type="button" class="btn-preset-card" data-preset="4">
+                <div class="preset-card-top">
+                  <strong>Sample 4: Wide Platter Spread</strong>
+                  <span class="preset-tag">10 Tracks</span>
+                </div>
+                <div class="preset-card-sub">Head: 53 &bull; Queue: 77, 5, 11, 175, 25, 38, 1, 20, 250, 17</div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </aside>
+
+      <section class="results-panel">
+
+        <nav class="tabs-nav" role="tablist">
+          <button type="button" class="tab-btn active" data-tab="look" role="tab" id="tab-look-btn">
+            <span class="legend-indicator serviced" style="width: 8px; height: 8px;"></span>
+            LOOK (Basic)
+          </button>
+          <button type="button" class="tab-btn" data-tab="clook" role="tab" id="tab-clook-btn">
+            <span class="legend-indicator"
+              style="width: 8px; height: 8px; background: var(--accent-terracotta);"></span>
+            C-LOOK (Basic)
+          </button>
+          <button type="button" class="tab-btn" data-tab="javed-look" role="tab" id="tab-javed-look-btn">
+            <span class="legend-indicator"
+              style="width: 8px; height: 8px; background: #0F766E;"></span>
+            LOOK (Research Paper)
+          </button>
+          <button type="button" class="tab-btn" data-tab="javed-clook" role="tab" id="tab-javed-clook-btn">
+            <span class="legend-indicator"
+              style="width: 8px; height: 8px; background: #B45309;"></span>
+            C-LOOK (Research Paper)
+          </button>
+          <button type="button" class="tab-btn" data-tab="compare-all" role="tab" id="tab-compare-all-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10" />
+              <line x1="12" y1="20" x2="12" y2="4" />
+              <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Comparison of All (4 Algorithms)
+          </button>
+        </nav>
+
+        <div class="playback-bar" id="playback-bar">
+          <div class="playback-controls">
+            <button type="button" class="btn-ctrl btn-ctrl-play" id="btn-play-pause" title="Play or pause animation">
+              <svg id="icon-play" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5">
+                <polygon points="5 3 19 12 5 21 5 3" />
+              </svg>
+              <svg id="icon-pause" style="display: none;" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <rect x="6" y="4" width="4" height="16" />
+                <rect x="14" y="4" width="4" height="16" />
+              </svg>
+              <span id="label-play-pause">Play</span>
+            </button>
+            <button type="button" class="btn-ctrl" id="btn-step-prev" title="Step backward">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="19 20 9 12 19 4 19 20" />
+                <line x1="5" y1="19" x2="5" y2="5" />
+              </svg>
+            </button>
+            <button type="button" class="btn-ctrl" id="btn-step-next" title="Step forward">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 4 15 12 5 20 5 4" />
+                <line x1="19" y1="5" x2="19" y2="19" />
+              </svg>
+            </button>
+            <button type="button" class="btn-ctrl" id="btn-step-reset" title="Reset playback">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                <path d="M3 3v5h5" />
+              </svg>
+            </button>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="step-counter-badge" id="step-counter-badge">
+              Step: 0 / 8
+            </div>
+          </div>
+        </div>
+
+        <div class="tab-content active" id="tab-content-look">
+
+          <div class="metrics-row">
+            <div class="metric-card emerald">
+              <div class="metric-label">Total Head Movement</div>
+              <div class="metric-value" id="look-metric-total">291</div>
+              <div class="metric-sub">Tracks traveled</div>
+            </div>
+            <div class="metric-card emerald">
+              <div class="metric-label">Average Seek Time</div>
+              <div class="metric-value" id="look-metric-avg">36.38</div>
+              <div class="metric-sub">Tracks per request</div>
+            </div>
+            <div class="metric-card emerald">
+              <div class="metric-label">Requests Serviced</div>
+              <div class="metric-value" id="look-metric-count">8</div>
+              <div class="metric-sub">Pending requests completed</div>
+            </div>
+            <div class="metric-card emerald">
+              <div class="metric-label">Sweep Direction</div>
+              <div class="metric-value" id="look-metric-dir" style="font-size: 22px;">UP</div>
+              <div class="metric-sub" id="look-metric-dir-sub">Initial seek direction</div>
+            </div>
+          </div>
+
+          <div id="disk-platter-container-look"></div>
+
+          <div class="visualization-frame">
+            <div class="chart-title-bar">
+              <div class="chart-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Figure: Head Movement Graph for LOOK Algorithm
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-indicator start"></span> Initial Head</div>
+                <div class="legend-item"><span class="legend-indicator serviced"></span> Serviced Track</div>
+                <div class="legend-item"><span class="legend-indicator turn"></span> Turnaround Point</div>
+              </div>
+            </div>
+
+            <div class="svg-canvas-container">
+              <svg id="svg-chart-look" viewBox="0 0 760 340" width="760" height="340"></svg>
+            </div>
+
+            <div id="rail-container-look"></div>
+          </div>
+
+          <div class="formula-box" id="formula-box-look">
+            <div class="formula-title">Step-by-Step Calculation Formula (LOOK)</div>
+            <div class="formula-text" id="formula-text-look">
+              Total Seek Movement = 10 + 19 + 13 + 22 + 62 + 135 + 7 + 23 = <span class="formula-highlight">291
+                tracks</span>.
+              <br>Average Seek Distance = 291 / 8 ≈ <span class="formula-highlight">36.38 tracks/request</span>.
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Sequence of Serviced Requests &amp; Seek Calculation</span>
+              <span class="badge-tag badge-academic">LOOK Execution Table</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="table-look">
+                <thead>
+                  <tr>
+                    <th>Step #</th>
+                    <th>Head Movement</th>
+                    <th>From Track</th>
+                    <th>To Track</th>
+                    <th>Distance</th>
+                    <th>Direction</th>
+                    <th>Cumulative Seek</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody id="steps-table-body-look"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="tab-content" id="tab-content-clook">
+
+          <div class="metrics-row">
+            <div class="metric-card terracotta">
+              <div class="metric-label">Total Head Movement</div>
+              <div class="metric-value" id="clook-metric-total">321</div>
+              <div class="metric-sub">Tracks traveled</div>
+            </div>
+            <div class="metric-card terracotta">
+              <div class="metric-label">Average Seek Time</div>
+              <div class="metric-value" id="clook-metric-avg">40.13</div>
+              <div class="metric-sub">Tracks per request</div>
+            </div>
+            <div class="metric-card terracotta">
+              <div class="metric-label">Requests Serviced</div>
+              <div class="metric-value" id="clook-metric-count">8</div>
+              <div class="metric-sub">Pending requests completed</div>
+            </div>
+            <div class="metric-card terracotta">
+              <div class="metric-label">Sweep Direction</div>
+              <div class="metric-value" id="clook-metric-dir" style="font-size: 22px;">UP</div>
+              <div class="metric-sub" id="clook-metric-dir-sub">Circular sweep direction</div>
+            </div>
+          </div>
+
+          <div id="disk-platter-container-clook"></div>
+
+          <div class="visualization-frame">
+            <div class="chart-title-bar">
+              <div class="chart-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Figure: Head Movement Graph for C-LOOK Algorithm
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-indicator start"></span> Initial Head</div>
+                <div class="legend-item"><span class="legend-indicator"
+                    style="background: var(--accent-terracotta);"></span> Serviced Track</div>
+                <div class="legend-item"><span class="legend-indicator jump"></span> Return Jump (No Service)</div>
+              </div>
+            </div>
+
+            <div class="svg-canvas-container">
+              <svg id="svg-chart-clook" viewBox="0 0 760 340" width="760" height="340"></svg>
+            </div>
+
+            <div id="rail-container-clook"></div>
+          </div>
+
+          <div class="formula-box" id="formula-box-clook">
+            <div class="formula-title">Step-by-Step Calculation Formula (C-LOOK)</div>
+            <div class="formula-text" id="formula-text-clook">
+              Total Seek Movement = 10 + 19 + 13 + 22 + 62 + 165 (jump) + 23 + 7 = <span class="formula-highlight">321
+                tracks</span>.
+              <br>Average Seek Distance = 321 / 8 ≈ <span class="formula-highlight">40.13 tracks/request</span> (or 156
+              tracks / 19.5 tracks if return jump is not counted).
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Sequence of Serviced Requests &amp; Seek Calculation</span>
+              <span class="badge-tag badge-stage">C-LOOK Execution Table</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="table-clook">
+                <thead>
+                  <tr>
+                    <th>Step #</th>
+                    <th>Head Movement</th>
+                    <th>From Track</th>
+                    <th>To Track</th>
+                    <th>Distance</th>
+                    <th>Direction</th>
+                    <th>Cumulative Seek</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody id="steps-table-body-clook"></tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="tab-content" id="tab-content-javed-look">
+
+          <div class="metrics-row">
+            <div class="metric-card teal">
+              <div class="metric-label">Total Head Movement</div>
+              <div class="metric-value" id="javed-look-metric-total">208</div>
+              <div class="metric-sub">Tracks traveled</div>
+            </div>
+            <div class="metric-card teal">
+              <div class="metric-label">Average Seek Time</div>
+              <div class="metric-value" id="javed-look-metric-avg">26.00</div>
+              <div class="metric-sub">Tracks per request</div>
+            </div>
+            <div class="metric-card teal">
+              <div class="metric-label">Requests Serviced</div>
+              <div class="metric-value" id="javed-look-metric-count">8</div>
+              <div class="metric-sub">Pending requests completed</div>
+            </div>
+            <div class="metric-card teal">
+              <div class="metric-label">Sweep Direction</div>
+              <div class="metric-value" id="javed-look-metric-dir" style="font-size: 22px;">DOWN</div>
+              <div class="metric-sub" id="javed-look-metric-dir-sub">Optimal seek direction</div>
+            </div>
+          </div>
+
+          <div id="disk-platter-container-javed-look"></div>
+
+          <div class="visualization-frame">
+            <div class="chart-title-bar">
+              <div class="chart-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Figure: Head Movement Graph for Research Paper LOOK Algorithm (Javed &amp; Khan)
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-indicator start"></span> Initial Head</div>
+                <div class="legend-item"><span class="legend-indicator" style="background: #0F766E;"></span> Serviced Track</div>
+                <div class="legend-item"><span class="legend-indicator turn"></span> Turnaround Point</div>
+              </div>
+            </div>
+
+            <div class="svg-canvas-container">
+              <svg id="svg-chart-javed-look" viewBox="0 0 760 340" width="760" height="340"></svg>
+            </div>
+
+            <div id="rail-container-javed-look"></div>
+          </div>
+
+          <div class="formula-box" id="formula-box-javed-look">
+            <div class="formula-title">Step-by-Step Calculation Formula (Research Paper LOOK)</div>
+            <div class="formula-text" id="formula-text-javed-look">
+              Calculating arithmetic seek breakdown...
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Sequence of Serviced Requests (Javed &amp; Khan Rearranged Queue)</span>
+              <span class="badge-tag badge-academic">Paper LOOK Execution Table</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="table-javed-look">
+                <thead>
+                  <tr>
+                    <th>Step #</th>
+                    <th>Head Movement</th>
+                    <th>From Track</th>
+                    <th>To Track</th>
+                    <th>Distance</th>
+                    <th>Direction</th>
+                    <th>Cumulative Seek</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody id="steps-table-body-javed-look"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="differences-card">
+            <div class="differences-card-header">
+              <div class="differences-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0F766E" stroke-width="2.2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                Differences with Respect to the Original / Basic LOOK Algorithm
+              </div>
+              <span class="badge-tag badge-academic">Academic Literature Analysis</span>
+            </div>
+            <div class="differences-grid">
+
+              <div class="diff-box teal">
+                <div class="diff-box-title">
+                  <span>1. Directional Optimization &amp; Analysis</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic LOOK:</strong> Blindly executes in whatever direction is passed by the caller (typically defaulting to UPWARD) without analyzing pending cylinder distribution.<br><br>
+                  <strong>Paper's LOOK:</strong> Explicitly evaluates both <em>LOOK (Upward)</em> and <em>LOOK (Downward)</em>. Proves that on typical real-world distributions (with head near lower tracks), <strong>LOOK (Downward)</strong> eliminates the large initial turnaround swing, cutting head travel dramatically (e.g., <strong>208 tracks vs 299 tracks</strong> on Sample 1).
+                </div>
+              </div>
+
+              <div class="diff-box teal">
+                <div class="diff-box-title">
+                  <span>2. Deterministic Queue Rearrangement</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic LOOK:</strong> Modeled as dynamic runtime head sweeping with immediate proximity checks.<br><br>
+                  <strong>Paper's LOOK:</strong> Rearranges the incoming I/O request queue statically before physical execution into two monotonic subsets: <code>Q = [R_lower &darr;, R_higher &uarr;]</code> (for Downward), minimizing disk controller seek recomputation overhead.
+                </div>
+              </div>
+
+              <div class="diff-box teal">
+                <div class="diff-box-title">
+                  <span>3. Wild Swing Elimination vs. SSTF</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic LOOK:</strong> Compared primarily against SCAN (preventing edge seeks to cylinder 0/199).<br><br>
+                  <strong>Paper's LOOK:</strong> Benchmarked against FCFS and SSTF. Proves LOOK (Downward) achieves equal or superior seek performance to SSTF (e.g., 208 vs 236 in Sample 1; 370 vs 590 in Sample 5) while <strong>completely eliminating starvation</strong> which plagues SSTF.
+                </div>
+              </div>
+
+              <div class="diff-box teal">
+                <div class="diff-box-title">
+                  <span>4. Seek Distance Formula Structure</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic LOOK:</strong> Computed step-by-step incrementally.<br><br>
+                  <strong>Paper's Closed-Form Model:</strong><br>
+                  &bull; <em>Downward:</em> <code>THM = (H_0 - min(R)) + (max(R) - min(R))</code><br>
+                  &bull; <em>Upward:</em> <code>THM = (max(R) - H_0) + (max(R) - min(R))</code><br>
+                  Proves that when <code>H_0 &lt; (max + min) / 2</code>, Downward is mathematically guaranteed to be superior.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="tab-content" id="tab-content-javed-clook">
+
+          <div class="metrics-row">
+            <div class="metric-card amber">
+              <div class="metric-label">Total Head Movement</div>
+              <div class="metric-value" id="javed-clook-metric-total">322</div>
+              <div class="metric-sub">Tracks traveled</div>
+            </div>
+            <div class="metric-card amber">
+              <div class="metric-label">Average Seek Time</div>
+              <div class="metric-value" id="javed-clook-metric-avg">40.25</div>
+              <div class="metric-sub">Tracks per request</div>
+            </div>
+            <div class="metric-card amber">
+              <div class="metric-label">Requests Serviced</div>
+              <div class="metric-value" id="javed-clook-metric-count">8</div>
+              <div class="metric-sub">Pending requests completed</div>
+            </div>
+            <div class="metric-card amber">
+              <div class="metric-label">Sweep Direction</div>
+              <div class="metric-value" id="javed-clook-metric-dir" style="font-size: 22px;">UP</div>
+              <div class="metric-sub" id="javed-clook-metric-dir-sub">Strict upward sweep</div>
+            </div>
+          </div>
+
+          <div id="disk-platter-container-javed-clook"></div>
+
+          <div class="visualization-frame">
+            <div class="chart-title-bar">
+              <div class="chart-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Figure: Head Movement Graph for Research Paper C-LOOK Algorithm (Javed &amp; Khan)
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-indicator start"></span> Initial Head</div>
+                <div class="legend-item"><span class="legend-indicator" style="background: #B45309;"></span> Serviced Track</div>
+                <div class="legend-item"><span class="legend-indicator jump"></span> Return Swing (No Service)</div>
+              </div>
+            </div>
+
+            <div class="svg-canvas-container">
+              <svg id="svg-chart-javed-clook" viewBox="0 0 760 340" width="760" height="340"></svg>
+            </div>
+
+            <div id="rail-container-javed-clook"></div>
+          </div>
+
+          <div class="formula-box" id="formula-box-javed-clook">
+            <div class="formula-title">Step-by-Step Calculation Formula (Research Paper C-LOOK)</div>
+            <div class="formula-text" id="formula-text-javed-clook">
+              Calculating arithmetic seek breakdown...
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">Sequence of Serviced Requests (Javed &amp; Khan Circular Queue)</span>
+              <span class="badge-tag badge-stage">Paper C-LOOK Execution Table</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table" id="table-javed-clook">
+                <thead>
+                  <tr>
+                    <th>Step #</th>
+                    <th>Head Movement</th>
+                    <th>From Track</th>
+                    <th>To Track</th>
+                    <th>Distance</th>
+                    <th>Direction</th>
+                    <th>Cumulative Seek</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody id="steps-table-body-javed-clook"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="differences-card">
+            <div class="differences-card-header">
+              <div class="differences-card-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B45309" stroke-width="2.2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="16" x2="12" y2="12" />
+                  <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+                Differences with Respect to the Original / Basic C-LOOK Algorithm
+              </div>
+              <span class="badge-tag badge-stage">Academic Literature Analysis</span>
+            </div>
+            <div class="differences-grid">
+
+              <div class="diff-box amber">
+                <div class="diff-box-title">
+                  <span>1. Strict Unidirectional Upward Sweep</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic C-LOOK:</strong> Often implemented with arbitrary upward or downward circular sweeping modes.<br><br>
+                  <strong>Paper's C-LOOK:</strong> Strictly formalized as an <strong>upward scan</strong> starting from initial head to the highest pending cylinder, followed by an immediate return swing to the lowest pending cylinder, treating the platter as circular with the highest track adjacent to the lowest.
+                </div>
+              </div>
+
+              <div class="diff-box amber">
+                <div class="diff-box-title">
+                  <span>2. Full Return Swing Mechanical Accounting</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic C-LOOK:</strong> Some educational tools classify the return jump as an idealized 0-cost logical repositioning.<br><br>
+                  <strong>Paper's C-LOOK:</strong> Explicitly accounts for the actuator slew distance of the return swing (e.g. <code>183 &rarr; 14 = 169 tracks</code>) in the Total Head Movement metric (<strong>322 tracks</strong> on Sample 1), faithfully modeling physical drive mechanics and seek latency.
+                </div>
+              </div>
+
+              <div class="diff-box amber">
+                <div class="diff-box-title">
+                  <span>3. Load-Dependent Efficiency Discovery</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic C-LOOK:</strong> Described generally as "superior due to uniform wait times".<br><br>
+                  <strong>Paper's C-LOOK:</strong> Highlights that at light and moderate loads, C-LOOK has <strong>worse head movement than LOOK and SSTF</strong> due to the return swing penalty. It is only superior at <strong>high multiprogramming loads</strong> because it eliminates starvation and bounds maximum waiting variance.
+                </div>
+              </div>
+
+              <div class="diff-box amber">
+                <div class="diff-box-title">
+                  <span>4. Two-Phase Ascending Queue Reordering</span>
+                </div>
+                <div class="diff-box-body">
+                  <strong>Basic C-LOOK:</strong> Relies on pointer increments across modular arrays.<br><br>
+                  <strong>Paper's C-LOOK:</strong> Employs a deterministic two-partition sorted queue: <code>Q = [R_higher &uarr;, R_lower &uarr;]</code>. The disk head services <code>R_higher</code>, executes the return swing straight to <code>min(R_lower)</code>, and finishes the ascending sweep.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="tab-content" id="tab-content-compare-all">
+
+          <div class="comp-4way-grid">
+
+            <div class="comp-4way-card card-look">
+              <div class="comp-4way-header">
+                <span class="comp-4way-title">1. Basic LOOK</span>
+                <span class="badge-tag badge-academic" style="font-size: 10px;">Standard</span>
+              </div>
+              <div class="comp-4way-metrics">
+                <div class="comp-4way-row">
+                  <span>Total Head Movement:</span>
+                  <strong class="mono" id="all-look-total">291 tracks</strong>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Average Seek:</span>
+                  <span class="mono" id="all-look-avg">36.38 tr/req</span>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Scan Behavior:</span>
+                  <span>Bidirectional sweep</span>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Direction Control:</span>
+                  <span>Caller specified</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="comp-4way-card card-clook">
+              <div class="comp-4way-header">
+                <span class="comp-4way-title">2. Basic C-LOOK</span>
+                <span class="badge-tag badge-stage" style="font-size: 10px;">Standard</span>
+              </div>
+              <div class="comp-4way-metrics">
+                <div class="comp-4way-row">
+                  <span>Total Head Movement:</span>
+                  <strong class="mono" id="all-clook-total">321 tracks</strong>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Average Seek:</span>
+                  <span class="mono" id="all-clook-avg">40.13 tr/req</span>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Scan Behavior:</span>
+                  <span>Unidirectional circular</span>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Return Jump Cost:</span>
+                  <span class="mono" id="all-clook-jump">165 tracks</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="comp-4way-card card-jlook">
+              <div class="comp-4way-header">
+                <span class="comp-4way-title">3. Research Paper LOOK</span>
+                <span class="badge-tag badge-academic" style="font-size: 10px; background:#CCFBF1; color:#0F766E;">Javed 2000</span>
+              </div>
+              <div class="comp-4way-metrics">
+                <div class="comp-4way-row">
+                  <span>Total Head Movement:</span>
+                  <strong class="mono" style="color: #0F766E;" id="all-jlook-total">208 tracks</strong>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Average Seek:</span>
+                  <span class="mono" id="all-jlook-avg">26.00 tr/req</span>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Optimal Direction:</span>
+                  <strong style="color: #0F766E;" id="all-jlook-opt">DOWNWARD</strong>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Swings Avoided:</span>
+                  <span>Yes (No turnaround swing)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="comp-4way-card card-jclook">
+              <div class="comp-4way-header">
+                <span class="comp-4way-title">4. Research Paper C-LOOK</span>
+                <span class="badge-tag badge-stage" style="font-size: 10px; background:#FEF3C7; color:#92400E;">Javed 2000</span>
+              </div>
+              <div class="comp-4way-metrics">
+                <div class="comp-4way-row">
+                  <span>Total Head Movement:</span>
+                  <strong class="mono" style="color: #B45309;" id="all-jclook-total">322 tracks</strong>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Average Seek:</span>
+                  <span class="mono" id="all-jclook-avg">40.25 tr/req</span>
+                </div>
+                <div class="comp-4way-row">
+                  <span>Return Swing Cost:</span>
+                  <span class="mono" id="all-jclook-swing">169 tracks</span>
+                </div>
+                <div class="comp-4way-row">
+                  <span>High Load Advantage:</span>
+                  <span>Starvation Prevention</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="visualization-frame">
+            <div class="chart-title-bar">
+              <div class="chart-title">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                Performance Comparison: Basic vs. Research Paper Algorithms
+              </div>
+              <div class="chart-legend">
+                <div class="legend-item"><span class="legend-indicator" style="background: var(--accent-emerald);"></span> Basic LOOK</div>
+                <div class="legend-item"><span class="legend-indicator" style="background: var(--accent-terracotta);"></span> Basic C-LOOK</div>
+                <div class="legend-item"><span class="legend-indicator" style="background: #0F766E;"></span> Paper LOOK</div>
+                <div class="legend-item"><span class="legend-indicator" style="background: #B45309;"></span> Paper C-LOOK</div>
+              </div>
+            </div>
+            <div class="svg-canvas-container" style="display: flex; justify-content: center;">
+              <svg id="svg-chart-compare-all" viewBox="0 0 900 310" width="100%" height="310"></svg>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+              <span class="card-title">Comprehensive 4-Way Technical Comparison Matrix</span>
+              <span class="badge-tag badge-academic">Algorithmic Tradeoffs</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Feature / Metric</th>
+                    <th>Basic LOOK</th>
+                    <th>Basic C-LOOK</th>
+                    <th>Research Paper LOOK (Javed &amp; Khan)</th>
+                    <th>Research Paper C-LOOK (Javed &amp; Khan)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><strong>Directional Strategy</strong></td>
+                    <td>Bidirectional (follows input direction)</td>
+                    <td>Unidirectional circular sweep</td>
+                    <td>Evaluates Upward vs. Downward; chooses optimal pass</td>
+                    <td>Strict upward sweep with return swing to minimum track</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Queue Formulation</strong></td>
+                    <td>Dynamic dispatch during motion</td>
+                    <td>Dynamic modular pointer loop</td>
+                    <td>Pre-sorted static queue: <code>[R_lower &darr;, R_higher &uarr;]</code></td>
+                    <td>Pre-sorted two-tier queue: <code>[R_higher &uarr;, R_lower &uarr;]</code></td>
+                  </tr>
+                  <tr>
+                    <td><strong>Return Swing Handling</strong></td>
+                    <td>Services requests in reverse pass</td>
+                    <td>Non-service circular jump</td>
+                    <td>Services requests in reverse pass after reaching boundary</td>
+                    <td>Direct mechanical swing to lowest pending track (counted in seek)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Total Seek Distance</strong></td>
+                    <td class="mono font-bold" id="matrix-look-total">--</td>
+                    <td class="mono font-bold" id="matrix-clook-total">--</td>
+                    <td class="mono font-bold" style="color: #0F766E;" id="matrix-jlook-total">--</td>
+                    <td class="mono font-bold" style="color: #B45309;" id="matrix-jclook-total">--</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Average Seek Time</strong></td>
+                    <td class="mono" id="matrix-look-avg">--</td>
+                    <td class="mono" id="matrix-clook-avg">--</td>
+                    <td class="mono" id="matrix-jlook-avg">--</td>
+                    <td class="mono" id="matrix-jclook-avg">--</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Starvation Resistance</strong></td>
+                    <td>High (all pending serviced)</td>
+                    <td>Very High (predictable latency)</td>
+                    <td>High (all pending serviced in 2 sweeps)</td>
+                    <td>Maximum (bounded waiting time across cylinders)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>Optimal Operational Regime</strong></td>
+                    <td>General-purpose storage</td>
+                    <td>High uniform latency QoS</td>
+                    <td>Low-to-medium workload optimization</td>
+                    <td>High-load multiprogramming &amp; database transactions</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 24px;">
+            <div class="card-header">
+              <span class="card-title">Live Performance Comparison Table (Values for Current Input)</span>
+              <span class="badge-tag badge-academic">Dynamic Simulation Results</span>
+            </div>
+            <div class="table-wrapper">
+              <table class="academic-table" style="margin-top: 0;">
+                <thead>
+                  <tr>
+                    <th>Algorithm</th>
+                    <th>Initial Head</th>
+                    <th>Direction</th>
+                    <th>Total Head Movement</th>
+                    <th>Average Seek Distance</th>
+                    <th>Service-Only Seek</th>
+                    <th>Return Jump / Swing</th>
+                  </tr>
+                </thead>
+                <tbody id="comparison-dynamic-tbody">
+                  <tr>
+                    <td><strong>1. Basic LOOK</strong></td>
+                    <td class="mono" id="tbl-look-head">--</td>
+                    <td class="mono" id="tbl-look-dir">--</td>
+                    <td class="mono font-bold" id="tbl-look-total">--</td>
+                    <td class="mono" id="tbl-look-avg">--</td>
+                    <td class="mono" id="tbl-look-noswing">--</td>
+                    <td class="mono">0 tr (Reverse sweep)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>2. Basic C-LOOK</strong></td>
+                    <td class="mono" id="tbl-clook-head">--</td>
+                    <td class="mono" id="tbl-clook-dir">--</td>
+                    <td class="mono font-bold" id="tbl-clook-total">--</td>
+                    <td class="mono" id="tbl-clook-avg">--</td>
+                    <td class="mono" id="tbl-clook-noswing">--</td>
+                    <td class="mono" id="tbl-clook-jump">--</td>
+                  </tr>
+                  <tr>
+                    <td><strong>3. Research Paper LOOK (Javed &amp; Khan)</strong></td>
+                    <td class="mono" id="tbl-jlook-head">--</td>
+                    <td class="mono font-bold" style="color: #0F766E;" id="tbl-jlook-dir">--</td>
+                    <td class="mono font-bold" style="color: #0F766E;" id="tbl-jlook-total">--</td>
+                    <td class="mono" id="tbl-jlook-avg">--</td>
+                    <td class="mono" id="tbl-jlook-noswing">--</td>
+                    <td class="mono">0 tr (Reverse sweep)</td>
+                  </tr>
+                  <tr>
+                    <td><strong>4. Research Paper C-LOOK (Javed &amp; Khan)</strong></td>
+                    <td class="mono" id="tbl-jclook-head">--</td>
+                    <td class="mono" id="tbl-jclook-dir">UP</td>
+                    <td class="mono font-bold" style="color: #B45309;" id="tbl-jclook-total">--</td>
+                    <td class="mono" id="tbl-jclook-avg">--</td>
+                    <td class="mono" id="tbl-jclook-noswing">--</td>
+                    <td class="mono" id="tbl-jclook-swing">--</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+    </div>
+
+  </main>
+
+  <script src="js/algorithms.js"></script>
+  <script src="js/javed_algorithms.js"></script>
+  <script src="js/visualizer.js"></script>
+  <script src="js/app.js"></script>
+</body>
+
+</html>
