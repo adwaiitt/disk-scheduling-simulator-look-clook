@@ -156,6 +156,7 @@
     presetButtons: document.querySelectorAll('.btn-preset-card')
   };
 
+  // Bootstraps event listeners and runs initial simulation on page load
   function init() {
     setupInputListeners();
     setupTabListeners();
@@ -165,6 +166,7 @@
     runSimulation();
   }
 
+  // Attaches event listeners for input validation, radio buttons, and action buttons
   function setupInputListeners() {
 
     elements.diskSize.addEventListener('input', () => {
@@ -197,6 +199,7 @@
     });
   }
 
+  // Updates UI radio button states and styling to reflect selected seek direction
   function setDirection(dir) {
     const isUp = dir.toUpperCase() === 'UP';
     elements.dirUpRadio.classList.toggle('checked', isUp);
@@ -259,6 +262,7 @@
     }
   };
 
+  // Attaches click listeners to research preset cards and populates simulation parameters
   function setupPresetListeners() {
     const presetCards = document.querySelectorAll('.btn-preset-card');
     const condTitleEl = document.getElementById('preset-cond-title');
@@ -292,6 +296,7 @@
     });
   }
 
+  // Clears active styling from preset cards and resets scenario condition description
   function clearActivePresets() {
     const presetCards = document.querySelectorAll('.btn-preset-card');
     presetCards.forEach(b => b.classList.remove('active'));
@@ -301,6 +306,7 @@
     if (condDescEl) condDescEl.textContent = 'Select a preset below to see the specific head starting position, directional sweeps, and seek conditions it tests.';
   }
 
+  // Attaches click event listeners to algorithm view tabs
   function setupTabListeners() {
     elements.tabButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -310,6 +316,7 @@
     });
   }
 
+  // Switches active algorithm view tab, toggles playback bar visibility, and resets animation
   function setActiveTab(tabKey) {
     state.activeTab = tabKey;
 
@@ -334,6 +341,7 @@
     updatePlaybackCounter(0);
   }
 
+  // Attaches click listeners to animation controller playback buttons
   function setupPlaybackListeners() {
     elements.btnPlayPause.addEventListener('click', togglePlayPause);
 
@@ -360,6 +368,7 @@
     });
   }
 
+  // Reads form inputs, validates parameters, executes all four scheduling algorithms, and updates displays
   function runSimulation() {
     let selectedDir = 'UP';
     for (const r of elements.dirRadios) {
@@ -410,15 +419,18 @@
     updatePlaybackCounter(0);
   }
 
+  // Displays validation error messages in the alert container
   function showValidationErrors(errors) {
     elements.validationErrorsList.innerHTML = errors.map(e => `<li>${e}</li>`).join('');
     elements.validationAlert.style.display = 'block';
   }
 
+  // Hides the validation error alert container
   function hideValidationErrors() {
     elements.validationAlert.style.display = 'none';
   }
 
+  // Retrieves calculation result dataset corresponding to currently active tab
   function getActiveResult() {
     if (!state.simulationData) return null;
     switch (state.activeTab) {
@@ -434,6 +446,7 @@
     }
   }
 
+  // Updates metrics, formulas, charts, physical rail, and steps table for Basic LOOK tab
   function updateLOOKDisplay(lookResult, originalRequests) {
     if (elements.lookMetricTotal) elements.lookMetricTotal.textContent = lookResult.totalHeadMovement;
     if (elements.lookMetricAvg) elements.lookMetricAvg.textContent = lookResult.averageSeekDistance.toFixed(2);
@@ -453,6 +466,7 @@
     populateStepsTable(elements.tableBodyLook, lookResult.steps);
   }
 
+  // Updates metrics, formulas, charts, physical rail, and steps table for Basic C-LOOK tab
   function updateCLOOKDisplay(clookResult, originalRequests) {
     if (elements.clookMetricTotal) elements.clookMetricTotal.textContent = clookResult.totalHeadMovement;
     if (elements.clookMetricAvg) elements.clookMetricAvg.textContent = clookResult.averageSeekDistance.toFixed(2);
@@ -474,6 +488,7 @@
     populateStepsTable(elements.tableBodyClook, clookResult.steps);
   }
 
+  // Updates metrics, directional formulas, charts, and steps table for Paper LOOK tab
   function updateJavedLOOKDisplay(javedLookResult, originalRequests) {
     if (!elements.javedLookMetricTotal) return;
 
@@ -520,6 +535,7 @@
     populateStepsTable(elements.tableBodyJavedLook, javedLookResult.steps);
   }
 
+  // Updates metrics, return swing breakdown, charts, and steps table for Paper C-LOOK tab
   function updateJavedCLOOKDisplay(javedCLookResult, originalRequests) {
     if (!elements.javedClookMetricTotal) return;
 
@@ -544,6 +560,7 @@
     populateStepsTable(elements.tableBodyJavedClook, javedCLookResult.steps);
   }
 
+  // Populates 4-way comparative cards, bar charts, technical matrix, and live performance table
   function updateAllComparisonDisplay(results) {
     if (!elements.allLookTotal) return;
 
@@ -604,6 +621,7 @@
     DiskVisualizer.renderAllComparisonChart(elements.svgChartCompareAll, results);
   }
 
+  // Generates and appends rows to execution sequence table
   function populateStepsTable(tbody, steps) {
     if (!tbody) return;
     tbody.innerHTML = '';
@@ -633,6 +651,7 @@
     }
   }
 
+  // Toggles step-by-step playback between play and pause states
   function togglePlayPause() {
     const activeResult = getActiveResult();
     if (!activeResult) return;
@@ -644,6 +663,7 @@
     }
   }
 
+  // Initiates automated animation loop and updates playback button icons
   function startPlayback(result) {
     state.isPlaying = true;
     elements.iconPlay.style.display = 'none';
@@ -658,6 +678,7 @@
     });
   }
 
+  // Halts animation playback and resets playback button icon
   function pausePlayback() {
     state.isPlaying = false;
     elements.iconPlay.style.display = 'inline';
@@ -666,6 +687,7 @@
     DiskVisualizer.pauseAnimation();
   }
 
+  // Updates current step counter readout in playback controller
   function updatePlaybackCounter(currentStep) {
     const activeResult = getActiveResult();
     const total = activeResult ? activeResult.steps.length : 0;

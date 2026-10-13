@@ -13,6 +13,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  // Validates user input boundaries and parses request queue tokens into unique track integers
   function validateAndParseInputs(rawInput) {
     const errors = [];
     const diskSize = parseInt(rawInput.diskSize, 10);
@@ -80,6 +81,7 @@
     };
   }
 
+  // Converts ordered cylinder paths into step-by-step movement records and computes aggregate seek metrics
   function buildExecutionPlan(pathList, headStart) {
     const steps = [];
     let current = headStart;
@@ -133,6 +135,7 @@
     };
   }
 
+  // Executes the bidirectional LOOK elevator algorithm and produces complete trace metrics
   function solveLOOK(diskSize, initialHead, initialDirection, requests) {
     const higher = requests.filter(r => r > initialHead).sort((a, b) => a - b);
     const lower = requests.filter(r => r < initialHead).sort((a, b) => a - b);
@@ -209,6 +212,7 @@
     };
   }
 
+  // Executes the unidirectional C-LOOK algorithm with circular return jump and computes seek metrics
   function solveCLOOK(diskSize, initialHead, initialDirection, requests) {
     const higher = requests.filter(r => r > initialHead).sort((a, b) => a - b);
     const lower = requests.filter(r => r < initialHead).sort((a, b) => a - b);
@@ -310,6 +314,7 @@
     };
   }
 
+  // Solves both LOOK and C-LOOK on identical inputs to generate comparative performance metrics
   function compareAll(diskSize, initialHead, initialDirection, requests) {
     return {
       LOOK: solveLOOK(diskSize, initialHead, initialDirection, requests),

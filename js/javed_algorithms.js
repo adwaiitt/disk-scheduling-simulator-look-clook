@@ -20,6 +20,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  // Stores official benchmark test workloads and expected results from Javed & Khan (Table 1)
   const PAPER_TEST_SAMPLES = [
     {
       id: 1,
@@ -103,6 +104,7 @@
     }
   ];
 
+  // Builds step-by-step execution traces and mechanical movement statistics for paper formulations
   function buildJavedPlan(pathList, headStart, algorithmKey) {
     const steps = [];
     let current = headStart;
@@ -156,6 +158,7 @@
     };
   }
 
+  // Evaluates both directional passes, selects optimal sweep direction, and schedules requests according to the paper
   function solveJavedLOOK(diskSize, initialHead, requestedDirection, requests) {
     const uniqueReqs = Array.from(new Set(requests));
     const higher = uniqueReqs.filter(r => r > initialHead).sort((a, b) => a - b);
@@ -275,6 +278,7 @@
     };
   }
 
+  // Executes strict upward sweep with mechanical return swing distance counted in total seek latency
   function solveJavedCLOOK(diskSize, initialHead, requestedDirection, requests) {
     const uniqueReqs = Array.from(new Set(requests));
     const higher = uniqueReqs.filter(r => r > initialHead).sort((a, b) => a - b);
@@ -349,6 +353,7 @@
     };
   }
 
+  // Simulates First-Come-First-Served disk scheduling for comparative benchmark validation
   function solveFCFS(diskSize, initialHead, requests) {
     const uniqueReqs = Array.from(new Set(requests));
     const pathList = [];
@@ -374,6 +379,7 @@
     };
   }
 
+  // Simulates Shortest-Seek-Time-First greedy scheduling to evaluate turnaround and starvation trade-offs
   function solveSSTF(diskSize, initialHead, requests) {
     const pending = Array.from(new Set(requests));
     const pathList = [];
@@ -414,6 +420,7 @@
     };
   }
 
+  // Compares all four disk scheduling algorithms against the research paper baseline
   function compareAllWithPaper(diskSize, initialHead, initialDirection, requests) {
     return {
       javedLook: solveJavedLOOK(diskSize, initialHead, initialDirection, requests),

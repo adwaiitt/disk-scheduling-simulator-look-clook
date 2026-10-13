@@ -13,6 +13,7 @@
 })(typeof self !== 'undefined' ? self : this, function () {
   'use strict';
 
+  // Initializes animation state, timer references, and visualizer playback defaults
   function Visualizer() {
     this.currentResult = null;
     this.activeStepIndex = 0;
@@ -22,6 +23,7 @@
     this.onStepChange = null;
   }
 
+  // Draws 2D Cartesian seek trajectory graph with coordinate grid and direction arrows
   Visualizer.prototype.renderTrajectoryGraph = function (svgElement, result, options = {}) {
     if (!svgElement || !result || !result.steps || result.steps.length === 0) return;
 
@@ -166,6 +168,7 @@
     svgElement.innerHTML = svgHtml;
   };
 
+  // Generates 1D physical cylinder track rail with actuator cursor and serviced pins
   Visualizer.prototype.renderPhysicalTrackBar = function (containerElement, result) {
     if (!containerElement || !result) return;
 
@@ -214,6 +217,7 @@
     containerElement.innerHTML = html;
   };
 
+  // Calculates actuator arm rotation angle and head ring radius using triangle trigonometry
   function calculateActuatorGeometry(track, diskSize) {
     const Cx = 185, Cy = 115;
     const Px = 65, Py = 65;
@@ -238,6 +242,7 @@
     };
   }
 
+  // Renders 2D rotary magnetic disk platter, spindle hub, and pivoting voice-coil actuator arm
   Visualizer.prototype.renderDiskPlatter = function (containerElement, result) {
     if (!containerElement || !result) return;
 
@@ -392,6 +397,7 @@
     containerElement.innerHTML = html;
   };
 
+  // Updates actuator arm rotation angle, active cylinder ring, and HUD monitor readouts
   Visualizer.prototype.updateDiskPlatter = function (prefix, result, stepIndex) {
     const isStepZero = stepIndex === 0;
     const currentStep = isStepZero ? null : result.steps[stepIndex - 1];
@@ -419,6 +425,7 @@
     if (travelEl) travelEl.textContent = isStepZero ? '0 tr' : `+${distance} tr`;
   };
 
+  // Synchronizes physical rail cursor, trajectory point markers, and platter hardware for current step
   Visualizer.prototype.highlightStep = function (stepIndex, result) {
     if (!result || !result.steps) return;
     this.activeStepIndex = stepIndex;
@@ -487,6 +494,7 @@
     }
   };
 
+  // Starts automated timer-driven playback loop across the execution sequence
   Visualizer.prototype.startAnimation = function (result, onStep) {
     if (!result || !result.steps || result.steps.length === 0) return;
     this.currentResult = result;
@@ -511,6 +519,7 @@
     }, this.stepIntervalMs);
   };
 
+  // Halts active timer playback loop
   Visualizer.prototype.pauseAnimation = function () {
     this.isPlaying = false;
     if (this.timerId) {
@@ -519,6 +528,7 @@
     }
   };
 
+  // Advances visualizer playback by one step
   Visualizer.prototype.stepForward = function (result) {
     if (!result || !result.steps) return;
     this.pauseAnimation();
@@ -528,6 +538,7 @@
     }
   };
 
+  // Reverts visualizer playback to the previous step
   Visualizer.prototype.stepBackward = function (result) {
     if (!result || !result.steps) return;
     this.pauseAnimation();
@@ -537,12 +548,14 @@
     }
   };
 
+  // Resets playback state and positions actuator to the initial track
   Visualizer.prototype.resetAnimation = function (result) {
     this.pauseAnimation();
     this.activeStepIndex = 0;
     this.highlightStep(0, result);
   };
 
+  // Renders two-algorithm comparative bar chart for basic LOOK and C-LOOK
   Visualizer.prototype.renderComparisonChart = function (svgElement, comparisonSuite) {
     if (!svgElement || !comparisonSuite || !comparisonSuite.LOOK || !comparisonSuite['C-LOOK']) return;
 
@@ -644,6 +657,7 @@
     svgElement.innerHTML = svgHtml;
   };
 
+  // Renders four-algorithm comparative bar charts for total head movement and average seek time
   Visualizer.prototype.renderAllComparisonChart = function (svgElement, allResults) {
     if (!svgElement || !allResults) return;
 
